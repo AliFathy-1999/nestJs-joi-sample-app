@@ -25,7 +25,7 @@ export class ValidationPipe implements PipeTransform {
     if (error) {
       throw new BadRequestException(`Validation failed: ${error.details.map((err) => err.message).join(', ')}.`);  
     }
-    return value
+    return bodyInput
   }
 }
 interface ArgumentMetadata {
