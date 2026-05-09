@@ -24,8 +24,11 @@
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.0",
+    "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/swagger": "^11.4.2",
     "class-transformer": "^0.5.1",
     "joi": "^17.11.0",
     "joi-class-decorators": "^1.1.1",
