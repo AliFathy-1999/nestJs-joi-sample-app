@@ -2,6 +2,7 @@ import { Expose } from "class-transformer";
 import { JoiSchema, JoiSchemaOptions } from "joi-class-decorators";
 import { ApiProperty } from "@nestjs/swagger";
 import * as Joi from 'joi';
+import { CategoryEnum } from "src/common/enum/category.enum";
 
 interface reviewInterface {
     rating: number;
@@ -94,8 +95,8 @@ export class validationBodyDto {
 })
 
 export class validationParamDto {
-    @ApiProperty({ description: 'Product category', enum: ['Fashions', 'Electronics', 'MobilesPhones', 'Perfumes'], example: 'Electronics' })
-    @Expose() @JoiSchema(Joi.string().valid('Fashions', 'Electronics', 'MobilesPhones', 'Perfumes').required())
+    @ApiProperty({ description: 'Product category', enum: CategoryEnum, example: 'Electronics' })
+    @Expose() @JoiSchema(Joi.string().valid(...Object.values(CategoryEnum)).required())
     category: string;
 }
 
