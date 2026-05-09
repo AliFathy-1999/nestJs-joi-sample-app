@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ValidationPipe } from './pipes/validation.pipe';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { HttpExceptionsFilter } from './filters/http-exception.filter';
 
 @Module({
     imports: [],
@@ -9,6 +10,10 @@ import { APP_PIPE } from '@nestjs/core';
         {
             provide: APP_PIPE,
             useClass: ValidationPipe,
+        },
+        {
+            provide: APP_FILTER,
+            useClass: HttpExceptionsFilter,
         }
     ],
 })

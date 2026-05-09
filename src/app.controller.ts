@@ -1,9 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Req, Res, UsePipes } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import { AppService } from './app.service';
-import { Request, Response } from 'express';
-import { validationBodyDto, validationParamDto, validationQueryParamDto } from './modules/test-module/dto/validate.dto';
+import { AppResponseMessages } from './common/constants/messages/common.message';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
+
+  @Get('health')
+  @HttpCode(HttpStatus.OK)
+  getHealth() {
+    return AppResponseMessages.SUCCESS.SERVICE_IS_RUNNING;
+  }
 }
