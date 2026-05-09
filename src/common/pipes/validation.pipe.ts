@@ -11,14 +11,19 @@ import { Lang } from '../enum/localization.enum';
 
 @Injectable()
 export class ValidationPipe implements PipeTransform {
+
   transform(value: any, metadata: ArgumentMetadata) {
     const { metatype } = metadata;
-    const bodyDto = metatype; // DTO class used for request validation
+
+    const bodyDto = metatype;
     const location = metadata.type || 'body';
 
-    // Convert plain JSON request body into a typed DTO instance so Joi can read the schema metadata.
-    // Without transformation, class-based decorators are not available on plain objects.
+    /**
+     * Convert plain object into DTO instance
+     * so Joi decorators can be resolved.
+     */
     const dtoObject = plainToInstance(bodyDto, value);
+
     const schema = getClassSchema(bodyDto);
 
     if (!schema) {
@@ -36,23 +41,68 @@ export class ValidationPipe implements PipeTransform {
 
     const joiError = error.details?.[0];
 
-    // Construct localization key from Joi error path for nested validations
+    /**
+     * Build localization key
+     *
+     * Examples:
+     * - phoneNumber.string.pattern.base
+     * - email.string.email
+     * - media.object.missing
+     */
     let key: string;
+
     if (joiError.path && joiError.path.length > 0) {
-      // For array items, replace numeric indices with 'item'
+
+      /**
+       * Replace array indexes with "item"
+       * Example:
+       * users.0.email
+       * =>
+       * users.item.email
+       */
       const pathSegments = joiError.path.map((segment: any) =>
-        typeof segment === 'number' ? 'item' : String(segment)
+        typeof segment === 'number'
+          ? 'item'
+          : String(segment)
       );
-      // Extract the error key from joiError.type (e.g., "any.required" -> "required")
-      const errorKey = joiError.context?.errorKey || joiError.type.split('.').pop() || joiError.type;
-      key = pathSegments.join('.') + '.' + errorKey;
+
+      /**
+       * Preserve complete Joi validation type
+       *
+       * Examples:
+       * - string.pattern.base
+       * - string.email
+       * - object.missing
+       * - any.required
+       */
+      const typeSegments = joiError.type.split('.');
+
+      const errorKey =
+        joiError.context?.errorKey ||
+        (
+          typeSegments.length > 2
+            ? typeSegments[typeSegments.length - 2]
+            : typeSegments[typeSegments.length - 1]
+        ) ||
+        joiError.type;
+
+      key = `${pathSegments.join('.')}.${errorKey}`;
+
     } else {
-      key = joiError.context?.errorKey || joiError.type.split('.').pop() || joiError.message;
+
+      key =
+        joiError.context?.errorKey ||
+        joiError.type.split('.').pop() ||
+        joiError.type;
     }
 
-    /** Unknown field */
-    if (joiError.type === "object.unknown") {
+    /**
+     * Handle unknown fields
+     */
+    if (joiError.type === 'object.unknown') {
+
       const field = joiError.context?.key;
+
       throw new BadRequestException({
         message: {
           en: `The field ${field} is not allowed.`,
@@ -62,18 +112,30 @@ export class ValidationPipe implements PipeTransform {
         location,
       });
     }
+
     /**
-     * localizeMessage validation messages for both supported languages.
-     * The localizeMessage helper resolves the translation key and injects context values,
-     * such as `{#limit}` or `{#value}`, into the final string.
+     * Localized Joi validation messages
      */
     throw new BadRequestException({
       message: {
-        en: localizeMessage({ key, lang: Lang.EN, context: joiError.context }),
-        ar: localizeMessage({ key, lang: Lang.AR, context: joiError.context }),
+        en: localizeMessage({
+          key,
+          lang: Lang.EN,
+          context: joiError.context,
+        }),
+
+        ar: localizeMessage({
+          key,
+          lang: Lang.AR,
+          context: joiError.context,
+        }),
       },
-      field: joiError.context?.label || joiError.context?.key,
-      location: 'body',
+
+      field:
+        joiError.context?.label ||
+        joiError.context?.key,
+
+      location,
     });
   }
 }

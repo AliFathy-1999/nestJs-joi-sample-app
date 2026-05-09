@@ -8,6 +8,7 @@
     "invalidName": "Full name must contain only Arabic or English letters and cannot contain multiple consecutive spaces."
   },
   "phoneNumber": {
+    "empty": "Phone number cannot be empty.",
     "base": "Phone number must be a string.",
     "length": "Phone number must be exactly {#limit} digits.",
     "pattern": "Phone number must start with 011, 012, 015, or 010 and contain 11 digits.",
@@ -15,7 +16,7 @@
   },
   "email": {
     "base": "Email must be a string.",
-    "pattern": "Email must be a valid email address.",
+    "email": "Email must be a valid email address.",
     "empty": "Email cannot be empty."
   },
   "gender": {

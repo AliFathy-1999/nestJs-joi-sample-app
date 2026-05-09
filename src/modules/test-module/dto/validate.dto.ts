@@ -60,7 +60,7 @@ export class validationBodyDto {
             .messages({
                 "string.base": "phoneNumber.base",
                 'string.length': 'phoneNumber.length',
-                'any.pattern.base': 'phoneNumber.pattern',
+                'string.pattern.base': 'phoneNumber.pattern',
                 'any.required': 'phoneNumber.required',
             }),
     )
@@ -74,7 +74,7 @@ export class validationBodyDto {
             .email()
             .optional()
             .messages({
-                'string.email': 'email.pattern',
+                'string.email': 'email.email',
                 'string.empty': 'email.empty',
             }),
     )
