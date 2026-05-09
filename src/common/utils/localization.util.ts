@@ -14,10 +14,24 @@ const isLocalizedMessageObject = (msg: any): msg is LocalizedMessage =>
 
 // Resolve a localization key to a translated string for the requested language.
 // Supports nested key paths like 'errors.user.notFound' and context interpolation.
+// Numeric path segments are treated as array indexes and fallback to the 'item' locale branch.
 function localizeMessage(data: ILocalize) {
-    const { key, context, lang } = data
+    const { key, context, lang } = data;
     const segments = key.split(".");
     let current: any = locales[lang];
+
+    const resolveSegment = (container: any, segment: string) => {
+        if (segment in container) {
+            return container[segment];
+        }
+
+        const isArrayIndex = /^\d+$/.test(segment);
+        if (isArrayIndex && container && typeof container === "object" && "item" in container) {
+            return container.item;
+        }
+
+        return undefined;
+    };
 
     // Missing language
     if (!current) {
@@ -25,15 +39,17 @@ function localizeMessage(data: ILocalize) {
         return key;
     }
 
-    // Traverse nested keys
+    // Traverse nested keys, supporting numeric indexes for arrays.
     for (const segment of segments) {
-        if (!(segment in current)) {
+        const next = resolveSegment(current, segment);
+        if (next === undefined) {
             console.warn(
                 `Localization warning: key "${key}" missing at segment "${segment}" in lang "${lang}".`
             );
             return key;
         }
-        current = current[segment];
+
+        current = next;
     }
 
     // Must resolve to a string
@@ -46,7 +62,7 @@ function localizeMessage(data: ILocalize) {
 
     // Inject Joi values {#limit}, {#value}, etc.
     let localized = current;
-    for (const [ctxKey, ctxValue] of Object.entries(context)) {
+    for (const [ctxKey, ctxValue] of Object.entries(context || {})) {
         localized = localized.replace(`{#${ctxKey}}`, String(ctxValue));
     }
 
