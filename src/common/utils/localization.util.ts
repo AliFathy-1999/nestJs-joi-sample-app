@@ -4,70 +4,61 @@ import { locales } from "../constants/localization/localization";
 import { ILocalize } from "src/common/interfaces/localization.interface";
 import { Lang, LocalizedMessage } from "../enum/localization.enum";
 
-// Type guard that checks whether a value matches the LocalizedMessage shape.
-// It ensures the object has a string value for each supported language key.
+/**
+ * Type guard: Checks if a value is a LocalizedMessage object.
+ * Ensures it has string values for all supported languages.
+ */
 const isLocalizedMessageObject = (msg: any): msg is LocalizedMessage =>
     msg &&
     typeof msg === "object" &&
     Object.values(Lang).every((key) => typeof msg[key] === "string");
 
-
-// Resolve a localization key to a translated string for the requested language.
-// Supports nested key paths like 'errors.user.notFound' and context interpolation.
-// Numeric path segments are treated as array indexes and fallback to the 'item' locale branch.
-function localizeMessage(data: ILocalize) {
-    const { key, context, lang } = data;
+/**
+ * Resolves a localization key to a translated string.
+ *
+ * - Supports nested keys like 'field.error.type'
+ * - Handles array indices by falling back to 'item' branch
+ * - Injects context values (e.g., {#limit} -> actual limit)
+ * - Falls back to the key itself if not found
+ */
+function localizeMessage({ key, lang, context }: ILocalize): string {
     const segments = key.split(".");
     let current: any = locales[lang];
 
-    const resolveSegment = (container: any, segment: string) => {
-        if (segment in container) {
-            return container[segment];
-        }
-
-        const isArrayIndex = /^\d+$/.test(segment);
-        if (isArrayIndex && container && typeof container === "object" && "item" in container) {
-            return container.item;
-        }
-
-        return undefined;
-    };
-
-    // Missing language
     if (!current) {
-        console.warn(`Localization warning: missing locale for lang "${lang}".`);
+        console.warn(`Missing locale for "${lang}".`);
         return key;
     }
 
-    // Traverse nested keys, supporting numeric indexes for arrays.
+    // Traverse nested keys
     for (const segment of segments) {
-        const next = resolveSegment(current, segment);
-        if (next === undefined) {
-            console.warn(
-                `Localization warning: key "${key}" missing at segment "${segment}" in lang "${lang}".`
-            );
-            return key;
+        if (segment in current) {
+            current = current[segment];
+            continue;
         }
 
-        current = next;
-    }
+        // Fallback for array indices
+        if (/^\d+$/.test(segment) && current?.item) {
+            current = current.item;
+            continue;
+        }
 
-    // Must resolve to a string
-    if (typeof current !== "string") {
-        console.warn(
-            `Localization warning: key "${key}" does not resolve to a string in lang "${lang}".`
-        );
+        console.warn(`Key "${key}" not found at "${segment}" for "${lang}".`);
         return key;
     }
 
-    // Inject Joi values {#limit}, {#value}, etc.
-    let localized = current;
-    for (const [ctxKey, ctxValue] of Object.entries(context || {})) {
-        localized = localized.replace(`{#${ctxKey}}`, String(ctxValue));
+    if (typeof current !== "string") {
+        console.warn(`Key "${key}" does not resolve to a string for "${lang}".`);
+        return key;
     }
 
-    return localized;
-}
+    // Inject context values
+    let result = current;
+    for (const [ctxKey, ctxValue] of Object.entries(context || {})) {
+        result = result.replace(`{#${ctxKey}}`, String(ctxValue));
+    }
 
+    return result;
+}
 
 export { isLocalizedMessageObject, localizeMessage }

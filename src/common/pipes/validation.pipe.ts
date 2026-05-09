@@ -9,22 +9,23 @@ import { getClassSchema } from 'joi-class-decorators';
 import { localizeMessage } from '../utils/localization.util';
 import { Lang } from '../enum/localization.enum';
 
+/**
+ * ValidationPipe: Handles Joi-based validation for DTOs.
+ *
+ * - Transforms plain objects to DTO instances for Joi schema resolution
+ * - Validates against Joi schemas and throws localized BadRequestExceptions
+ * - Builds localization keys from Joi error paths and types
+ * - Supports nested arrays by replacing indices with 'item'
+ */
 @Injectable()
 export class ValidationPipe implements PipeTransform {
-
   transform(value: any, metadata: ArgumentMetadata) {
     const { metatype } = metadata;
-
-    const bodyDto = metatype;
     const location = metadata.type || 'body';
 
-    /**
-     * Convert plain object into DTO instance
-     * so Joi decorators can be resolved.
-     */
-    const dtoObject = plainToInstance(bodyDto, value);
-
-    const schema = getClassSchema(bodyDto);
+    // Transform to DTO instance for Joi decorators
+    const dtoObject = plainToInstance(metatype, value);
+    const schema = getClassSchema(metatype);
 
     if (!schema) {
       return dtoObject;
@@ -41,68 +42,29 @@ export class ValidationPipe implements PipeTransform {
 
     const joiError = error.details?.[0];
 
-    /**
-     * Build localization key
-     *
-     * Examples:
-     * - phoneNumber.string.pattern.base
-     * - email.string.email
-     * - media.object.missing
-     */
+    // Build localization key from path and error type
     let key: string;
-
-    if (joiError.path && joiError.path.length > 0) {
-
-      /**
-       * Replace array indexes with "item"
-       * Example:
-       * users.0.email
-       * =>
-       * users.item.email
-       */
+    if (joiError.path?.length > 0) {
+      // Replace array indices with 'item'
       const pathSegments = joiError.path.map((segment: any) =>
-        typeof segment === 'number'
-          ? 'item'
-          : String(segment)
+        typeof segment === 'number' ? 'item' : String(segment)
       );
 
-      /**
-       * Preserve complete Joi validation type
-       *
-       * Examples:
-       * - string.pattern.base
-       * - string.email
-       * - object.missing
-       * - any.required
-       */
-      const typeSegments = joiError.type.split('.');
-
+      // Extract error key from Joi type
+      const typeParts = joiError.type.split('.');
       const errorKey =
         joiError.context?.errorKey ||
-        (
-          typeSegments.length > 2
-            ? typeSegments[typeSegments.length - 2]
-            : typeSegments[typeSegments.length - 1]
-        ) ||
+        (typeParts.length > 2 ? typeParts[typeParts.length - 2] : typeParts[typeParts.length - 1]) ||
         joiError.type;
 
       key = `${pathSegments.join('.')}.${errorKey}`;
-
     } else {
-
-      key =
-        joiError.context?.errorKey ||
-        joiError.type.split('.').pop() ||
-        joiError.type;
+      key = joiError.context?.errorKey || joiError.type.split('.').pop() || joiError.type;
     }
 
-    /**
-     * Handle unknown fields
-     */
+    // Handle unknown fields separately
     if (joiError.type === 'object.unknown') {
-
       const field = joiError.context?.key;
-
       throw new BadRequestException({
         message: {
           en: `The field ${field} is not allowed.`,
@@ -113,28 +75,13 @@ export class ValidationPipe implements PipeTransform {
       });
     }
 
-    /**
-     * Localized Joi validation messages
-     */
+    // Throw localized validation error
     throw new BadRequestException({
       message: {
-        en: localizeMessage({
-          key,
-          lang: Lang.EN,
-          context: joiError.context,
-        }),
-
-        ar: localizeMessage({
-          key,
-          lang: Lang.AR,
-          context: joiError.context,
-        }),
+        en: localizeMessage({ key, lang: Lang.EN, context: joiError.context }),
+        ar: localizeMessage({ key, lang: Lang.AR, context: joiError.context }),
       },
-
-      field:
-        joiError.context?.label ||
-        joiError.context?.key,
-
+      field: joiError.context?.label || joiError.context?.key,
       location,
     });
   }
