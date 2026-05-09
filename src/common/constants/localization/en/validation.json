@@ -1,0 +1,86 @@
+{
+  "fullName": {
+    "required": "Full name is required.",
+    "empty": "Full name cannot be empty.",
+    "base": "Full name must be a string.",
+    "min": "Full name must have at least {#limit} characters.",
+    "max": "Full name can have at most {#limit} characters.",
+    "invalidName": "Full name must contain only Arabic or English letters and cannot contain multiple consecutive spaces."
+  },
+  "phoneNumber": {
+    "base": "Phone number must be a string.",
+    "length": "Phone number must be exactly {#limit} digits.",
+    "pattern": "Phone number must start with 011, 012, 015, or 010 and contain 11 digits.",
+    "required": "Phone number is required."
+  },
+  "email": {
+    "base": "Email must be a string.",
+    "pattern": "Email must be a valid email address.",
+    "empty": "Email cannot be empty."
+  },
+  "gender": {
+    "only": "Gender must be either 'M' or 'F'.",
+    "required": "Gender is required.",
+    "string": "Gender must be a string."
+  },
+  "militaryStatus": {
+    "required": "Military status is required when gender is M.",
+    "base": "Military status must be a string.",
+    "empty": "Military status cannot be empty."
+  },
+  "age": {
+    "base": "Age must be a number.",
+    "min": "Age must be at least {#limit}.",
+    "max": "Age must be at most {#limit}.",
+    "required": "Age is required."
+  },
+  "profileFileName": {
+    "required": "Profile file name is required when profile picture is provided.",
+    "base": "Profile file name must be a string.",
+    "empty": "Profile file name cannot be empty."
+  },
+  "profilePicture": {
+    "base": "Profile picture must be a string.",
+    "empty": "Profile picture cannot be empty."
+  },
+  "reviews": {
+    "base": "Reviews must be an array.",
+    "required": "Reviews are required.",
+    "item": {
+      "base": "Each review must be an object.",
+      "required": "Each review item is required.",
+      "rating": {
+        "base": "Rating must be a number.",
+        "min": "Rating must be at least {#limit}.",
+        "required": "Rating is required."
+      },
+      "comment": {
+        "base": "Comment must be a string.",
+        "min": "Comment must be at least {#limit} characters.",
+        "max": "Comment can have at most {#limit} characters.",
+        "empty": "Comment cannot be empty.",
+        "required": "Comment is required."
+      }
+    }
+  },
+  "isVerified": {
+    "base": "isVerified must be a boolean value.",
+    "boolean": "isVerified must be a boolean value.",
+    "required": "Verification status is required."
+  },
+  "limit": {
+    "base": "Limit must be a number.",
+    "min": "Limit must be at least {#limit}.",
+    "max": "Limit can be at most {#limit}."
+  },
+  "page": {
+    "base": "Page must be a number.",
+    "min": "Page must be at least {#limit}.",
+    "max": "Page can be at most {#limit}."
+  },
+  "category": {
+    "only": "Category must be one of: Fashions, Electronics, MobilesPhones, Perfumes.",
+    "required": "Category is required.",
+    "base": "Category must be a string."
+  }
+}
